@@ -1,8 +1,20 @@
 const { EmbedBuilder } = require('discord.js');
 const Giveaway = require('../models/Giveaway');
 
+// Simple in-memory cache (will reset if bot restarts)
+const endedGiveaways = new Set();
+
 async function endGiveaway(interaction) {
   const messageId = interaction.options.getString('message_id');
+
+  // Extra safety: check if already ended
+  if (endedGiveaways.has(messageId)) {
+    return interaction.reply({
+      content: 'This giveaway has already ended!',
+      ephemeral: true,
+    });
+  }
+
   const giveaway = await Giveaway.findOne({ messageId, ongoing: true });
 
   if (!giveaway) {
@@ -33,6 +45,9 @@ async function endGiveaway(interaction) {
   giveaway.ongoing = false;
   await giveaway.save();
 
+  // Mark as ended in our in-memory cache
+  endedGiveaways.add(messageId);
+
   const channel = await interaction.guild.channels.fetch(giveaway.channelId);
   const message = await channel.messages.fetch(giveaway.messageId);
   let embed = message.embeds[0];
@@ -42,6 +57,7 @@ async function endGiveaway(interaction) {
   } else {
     embed = EmbedBuilder.from(embed);
   }
+
   embed.setTitle('Giveaway Ended');
   embed.setDescription(
     `Prize: **${giveaway.prize}**\nWinners: ${winners.map((w) => `<@${w}>`).join(', ')}`
