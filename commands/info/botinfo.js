@@ -4,6 +4,7 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  PermissionFlagsBits,
 } = require('discord.js');
 const moment = require('moment');
 const os = require('os');
@@ -11,9 +12,18 @@ const os = require('os');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('botinfo')
-    .setDescription('Displays information about the bot.'),
+    .setDescription('Displays information about the bot.')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator), // Restrict to Admins only
 
   async execute(interaction) {
+    // Extra runtime check for safety
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+      return interaction.reply({
+        content: '❌ You do not have permission to use this command.',
+        ephemeral: true,
+      });
+    }
+
     const { client } = interaction;
     const totalGuilds = client.guilds.cache.size;
     const totalMembers = client.guilds.cache.reduce(
@@ -22,9 +32,7 @@ module.exports = {
     );
     const uptime = moment.duration(client.uptime).humanize();
 
-    const memoryUsage = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(
-      2
-    );
+    const memoryUsage = (process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2);
     const totalMemory = (os.totalmem() / 1024 / 1024).toFixed(2);
     const cpuUsage = os.loadavg()[0].toFixed(2);
     const cpuModel = os.cpus()[0].model;
@@ -42,45 +50,42 @@ module.exports = {
         },
         {
           name: 'Servers',
-          value: '```elm\n' + totalGuilds + '\n```',
+          value: `\`\`\`elm\n${totalGuilds}\n\`\`\``,
           inline: true,
         },
         {
           name: 'Users',
-          value: '```elm\n' + totalMembers + '\n```',
+          value: `\`\`\`elm\n${totalMembers}\n\`\`\``,
           inline: true,
         },
         {
           name: 'Uptime',
-          value: '```elm\n' + uptime + '\n```',
+          value: `\`\`\`elm\n${uptime}\n\`\`\``,
           inline: true,
         },
         {
           name: 'CPU Usage',
-          value: '```elm\n' + cpuUsage + '%\n```',
+          value: `\`\`\`elm\n${cpuUsage}%\n\`\`\``,
           inline: true,
         },
         {
           name: 'RAM Usage',
-          value: '```elm\n' + memoryUsage + ' MB / ' + totalMemory + ' MB\n```',
+          value: `\`\`\`elm\n${memoryUsage} MB / ${totalMemory} MB\n\`\`\``,
           inline: true,
         },
         {
           name: 'CPU Model',
-          value: '```elm\n' + cpuModel + '\n```',
+          value: `\`\`\`elm\n${cpuModel}\n\`\`\``,
           inline: true,
         },
         {
           name: 'Operating System',
-          value: '```elm\n' + operatingSystem + '\n```',
+          value: `\`\`\`elm\n${operatingSystem}\n\`\`\``,
           inline: true,
         },
         {
           name: 'Created On',
-          value:
-            '```elm\n' +
-            moment(client.user.createdAt).format('MMMM Do YYYY, h:mm:ss A') +
-            '\n```',
+          value: `\`\`\`elm\n${moment(client.user.createdAt).format('MMMM Do YYYY, h:mm:ss A')}\n\`\`\``,
           inline: true,
         },
         {
@@ -100,9 +105,7 @@ module.exports = {
       .setURL('https://github.com/birajrai/Lanya.git')
       .setStyle(ButtonStyle.Link);
 
-    const row = new ActionRowBuilder().addComponents(
-      sourceCodeButton
-    );
+    const row = new ActionRowBuilder().addComponents(sourceCodeButton);
 
     await interaction.reply({ embeds: [botInfoEmbed], components: [row] });
   },
