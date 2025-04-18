@@ -1,5 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
+// Cooldown setup (in milliseconds)
+const COOLDOWN_TIME = 12 * 60 * 60 * 1000; // 12 hours
+const cooldowns = new Map(); // Stores userId: timestamp
+
 const ALLOWED_CHANNEL_ID = '1362656559871688856'; // Replace with your matchmaking channel ID
 
 module.exports = {
@@ -8,7 +12,6 @@ module.exports = {
     .setDescription('Find a match from the opposite gender 💘'),
 
   async execute(interaction) {
-    // Restrict to specific channel
     if (interaction.channelId !== ALLOWED_CHANNEL_ID) {
       return interaction.reply({
         content: `❌ This command can only be used in <#${ALLOWED_CHANNEL_ID}>!`,
@@ -18,8 +21,23 @@ module.exports = {
 
     const member = interaction.member;
     const guild = interaction.guild;
+    const userId = member.id;
 
-    // Find Male/Female roles
+    // Check cooldown
+    const lastUsed = cooldowns.get(userId);
+    const now = Date.now();
+
+    if (lastUsed && now - lastUsed < COOLDOWN_TIME) {
+      const remaining = COOLDOWN_TIME - (now - lastUsed);
+      const hours = Math.floor(remaining / (60 * 60 * 1000));
+      const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+      return interaction.reply({
+        content: `⏳ You can use this command again in **${hours}h ${minutes}m**.`,
+        ephemeral: true
+      });
+    }
+
     const maleRole = guild.roles.cache.find(r => r.name.toLowerCase() === 'male');
     const femaleRole = guild.roles.cache.find(r => r.name.toLowerCase() === 'female');
 
@@ -27,7 +45,6 @@ module.exports = {
       return interaction.reply("⚠️ The roles 'Male' and 'Female' must exist in the server.");
     }
 
-    // Check the user’s role
     const userIsMale = member.roles.cache.has(maleRole.id);
     const userIsFemale = member.roles.cache.has(femaleRole.id);
 
@@ -35,7 +52,6 @@ module.exports = {
       return interaction.reply("❌ You need to have either the 'Male' or 'Female' role to use this command.");
     }
 
-    // Get opposite gender members who are online and not the user
     const oppositeRole = userIsMale ? femaleRole : maleRole;
     const candidates = oppositeRole.members.filter(m =>
       m.id !== member.id &&
@@ -46,10 +62,8 @@ module.exports = {
       return interaction.reply("😢 No online matches available from the opposite gender right now.");
     }
 
-    // Pick one randomly
     const match = candidates.random();
 
-    // Create the embed with profile details
     const embed = new EmbedBuilder()
       .setColor('#FF69B4')
       .setTitle('💘 It’s a Match!')
@@ -63,5 +77,27 @@ module.exports = {
       .setFooter({ text: 'Made with love by CupidBot 🏹' });
 
     await interaction.reply({ embeds: [embed] });
+
+    // DM both users
+    try {
+      await member.send({
+        content: `💖 You’ve been matched with <@${match.id}>! Start a conversation and see where it goes!`,
+        embeds: [embed]
+      });
+    } catch (err) {
+      console.warn(`❌ Could not DM ${member.user.tag}`);
+    }
+
+    try {
+      await match.send({
+        content: `💖 You’ve been matched with <@${member.id}>! Start a conversation and see where it goes!`,
+        embeds: [embed]
+      });
+    } catch (err) {
+      console.warn(`❌ Could not DM ${match.user.tag}`);
+    }
+
+    // Set cooldown
+    cooldowns.set(userId, now);
   }
 };
