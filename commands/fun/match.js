@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 // Cooldown setup (in milliseconds)
-const COOLDOWN_TIME = 12 * 60 * 60 * 1000; // 12 hours
+const COOLDOWN_TIME = 24 * 60 * 60 * 1000; // 24 hours
 const cooldowns = new Map(); // Stores userId: timestamp
 
 const ALLOWED_CHANNEL_ID = '1362656559871688856'; // Replace with your matchmaking channel ID
+const MATCH_CHANNEL_LINK = 'https://discord.com/channels/1153417551699783801/1362656559871688856';
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -78,21 +79,19 @@ module.exports = {
 
     await interaction.reply({ embeds: [embed] });
 
-    // DM both users
+    // DM both users with instructions and match info
+    const dmMessage = `💖 You’ve been matched with <@${userIsMale ? match.id : member.id}>!\n`
+      + `Want to chat? Say hi in DMs!\n\n`
+      + `If you're not interested, no worries — you can try again after 24 hours by using the **/match** command in this channel:\n👉 ${MATCH_CHANNEL_LINK}`;
+
     try {
-      await member.send({
-        content: `💖 You’ve been matched with <@${match.id}>! Start a conversation and see where it goes!`,
-        embeds: [embed]
-      });
+      await member.send({ content: dmMessage, embeds: [embed] });
     } catch (err) {
       console.warn(`❌ Could not DM ${member.user.tag}`);
     }
 
     try {
-      await match.send({
-        content: `💖 You’ve been matched with <@${member.id}>! Start a conversation and see where it goes!`,
-        embeds: [embed]
-      });
+      await match.send({ content: dmMessage, embeds: [embed] });
     } catch (err) {
       console.warn(`❌ Could not DM ${match.user.tag}`);
     }
