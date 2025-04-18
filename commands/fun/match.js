@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
-const ALLOWED_CHANNEL_ID = '1362656559871688856'; // ⬅️ Replace with your matchmaking channel ID
+const ALLOWED_CHANNEL_ID = '1362656559871688856'; // Replace with your matchmaking channel ID
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -8,7 +8,7 @@ module.exports = {
     .setDescription('Find a match from the opposite gender 💘'),
 
   async execute(interaction) {
-    // 🚫 Restrict to specific channel
+    // Restrict to specific channel
     if (interaction.channelId !== ALLOWED_CHANNEL_ID) {
       return interaction.reply({
         content: `❌ This command can only be used in <#${ALLOWED_CHANNEL_ID}>!`,
@@ -49,12 +49,17 @@ module.exports = {
     // Pick one randomly
     const match = candidates.random();
 
-    // Make the match!
+    // Create the embed with profile details
     const embed = new EmbedBuilder()
       .setColor('#FF69B4')
       .setTitle('💘 It’s a Match!')
-      .setDescription(`❤️ ${member} matched with ${match}!\nMaybe destiny brought you two together 😉`)
+      .setDescription(`❤️ <@${member.id}> matched with <@${match.id}>!\nMaybe destiny brought you two together 😉`)
       .setThumbnail('https://media.giphy.com/media/3o7abldj0b3rxrZUxW/giphy.gif')
+      .addFields(
+        { name: 'Username', value: `${match.user.username}`, inline: true },
+        { name: 'ID', value: `${match.id}`, inline: true }
+      )
+      .setImage(match.user.displayAvatarURL({ size: 512 }))
       .setFooter({ text: 'Made with love by CupidBot 🏹' });
 
     await interaction.reply({ embeds: [embed] });
