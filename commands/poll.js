@@ -1,35 +1,32 @@
-const { Client, Intents } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
+const { SlashCommandBuilder } = require('discord.js');
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('poll')
+    .setDescription('Create a simple Yes/No poll.')
+    .addStringOption(option =>
+      option.setName('question')
+        .setDescription('The question for the poll')
+        .setRequired(true)),
 
-// Dynamic command loading
-client.commands = new Map();
+  async execute(interaction) {
+    const question = interaction.options.getString('question');
 
-fs.readdirSync('./commands').forEach(file => {
-  if (file.endsWith('.js')) {
-    const command = require(`./commands/${file}`);
-    client.commands.set(command.data.name, command);
-  }
-});
+    // Create the poll message
+    const pollEmbed = {
+      color: 0x5865f2,
+      title: 'Yes/No Poll',
+      description: `**${question}**\n\nReact with ✅ for Yes, ❌ for No.`,
+    };
 
-client.on('ready', () => {
-  console.log(`${client.user.tag} has logged in.`);
-});
+    // Send the poll message
+    const pollMsg = await interaction.reply({
+      embeds: [pollEmbed],
+      fetchReply: true,
+    });
 
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-  if (!command) return;
-
-  try {
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
-  }
-});
-
-client.login('YOUR_BOT_TOKEN');
+    // Add reactions for Yes/No voting
+    await pollMsg.react('✅');
+    await pollMsg.react('❌');
+  },
+};
