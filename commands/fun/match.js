@@ -54,7 +54,7 @@ module.exports = {
       .setColor('#FF69B4')
       .setTitle('💘 It’s a Match!')
       .setDescription(`❤️ <@${member.id}> matched with <@${match.id}>!\nMaybe destiny brought you two together 😉`)
-      .setThumbnail('https://media.giphy.com/media/3o7abldj0b3rxrZUxW/giphy.gif')
+      .setThumbnail('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExMW9oYXQxMm52Z3BvcXFidHFwbjVhczgxcGhwNmx3NGlpd2R0Z3hkciZlcD12MV9naWZzX3NlYXJjaCZjdD1n/9d3LQ6TdV2Flo8ODTU/giphy.gif')
       .addFields(
         { name: 'Username', value: `${match.user.username}`, inline: true },
         { name: 'ID', value: `${match.id}`, inline: true }
