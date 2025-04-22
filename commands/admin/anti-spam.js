@@ -13,30 +13,26 @@ module.exports = {
           { name: 'Disable', value: 'disable' }
         )),
   
+  // Add this to prevent auto-defer in interactionCreate
+  suppressDefer: true,
+  
   async execute(interaction) {
     try {
-      // Defer the reply first to prevent interaction timeout
-      await interaction.deferReply({ ephemeral: true });
-
+      // Immediately reply instead of deferring
       const state = interaction.options.getString('state');
       const isEnabled = state === 'enable';
 
-      // Update global state (replace with your preferred storage)
       global.antiSpamEnabled = isEnabled;
 
-      await interaction.editReply(
-        isEnabled 
+      await interaction.reply({
+        content: isEnabled 
           ? '✅ Anti-spam protection enabled' 
-          : '❌ Anti-spam protection disabled'
-      );
+          : '❌ Anti-spam protection disabled',
+        ephemeral: true
+      });
     } catch (error) {
       console.error('Anti-spam command error:', error);
       if (!interaction.replied) {
-        await interaction.followUp({ 
+        await interaction.reply({ 
           content: '❌ Failed to process command', 
-          ephemeral: true 
-        });
-      }
-    }
-  }
-};
+          ephemeral:
