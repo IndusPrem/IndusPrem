@@ -315,32 +315,22 @@ const dares = [
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('td')
-    .setDescription('Get a random Truth or Dare question!')
+    .setName('td') // ✅ new name
+    .setDescription('Play Truth or Dare!')
     .addStringOption(option =>
-      option.setName('type')
+      option.setName('choice')
         .setDescription('Choose truth or dare')
         .setRequired(true)
         .addChoices(
           { name: 'Truth', value: 'truth' },
-          { name: 'Dare', value: 'dare' }
-        )
-    ),
+          { name: 'Dare', value: 'dare' },
+        )),
 
   async execute(interaction) {
-    const type = interaction.options.getString('type');
+    const choice = interaction.options.getString('choice');
+    const list = choice === 'truth' ? truths : dares;
+    const prompt = list[Math.floor(Math.random() * list.length)];
 
-    const isTruth = type === 'truth';
-    const list = isTruth ? truths : dares;
-    const question = list[Math.floor(Math.random() * list.length)];
-
-    const embed = new EmbedBuilder()
-      .setTitle(isTruth ? '🧐 Truth' : '🔥 Dare')
-      .setDescription(`**${question}**`)
-      .setColor(isTruth ? 0x3498DB : 0xE74C3C)
-      .setFooter({ text: 'Use /td to get another one!' })
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply(`${interaction.user}, here’s your ${choice}: **${prompt}**`);
   }
 };
