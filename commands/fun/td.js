@@ -272,9 +272,11 @@ const dareQuestions = [
 ];
 
 module.exports = {
-    name: 'td',
-    description: 'Play Truth or Dare!',
-    execute(message, args) {
+    data: new SlashCommandBuilder()
+        .setName('td')
+        .setDescription('Play Truth or Dare!'),
+        
+    async execute(interaction) {
         const isTruth = Math.random() < 0.5;
         const question = isTruth 
             ? truthQuestions[Math.floor(Math.random() * truthQuestions.length)]
@@ -284,13 +286,13 @@ module.exports = {
             .setColor(isTruth ? '#4287f5' : '#f54242')
             .setTitle(`${isTruth ? '🤔 Truth' : '🎯 Dare'} Time!`)
             .setDescription(question)
-            .setThumbnail(message.author.displayAvatarURL({ dynamic: true }))
+            .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true }))
             .setFooter({ 
-                text: `Requested by ${message.author.username}`,
-                iconURL: message.author.displayAvatarURL({ dynamic: true })
+                text: `Requested by ${interaction.user.username}`,
+                iconURL: interaction.user.displayAvatarURL({ dynamic: true })
             })
             .setTimestamp();
 
-        message.channel.send({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed] });
     },
 };
