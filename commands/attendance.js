@@ -53,3 +53,4 @@ module.exports = {
     await interaction.reply({ content: '✅ Attendance recorded and posted.', ephemeral: true });
   }
 };
+
